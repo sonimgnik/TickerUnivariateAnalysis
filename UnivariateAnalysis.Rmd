@@ -1,0 +1,247 @@
+---
+title: "Ticker Univariate Analysis"
+#output: html_notebook
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    toc: true
+    number_sections: true
+---
+
+```{r seetup, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE, results='hide', comment=NA}
+setwd("/cloud/project")
+options(scipen = 999)
+now<-format(Sys.time(), "%d-%m-%Y")
+```
+
+```{r ticker, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE, results='hide', comment=NA}
+stock <- 'HTZ'
+```
+## Data Results{.tabset}
+
+### Historic Data Table
+```{r get data, message=FALSE, warning=FALSE, comment=NA, include=FALSE, paged.print=FALSE, results='hide'}
+require(quantmod)
+start <- Sys.Date() - 1092
+end <- Sys.Date()
+tickers <- c(stock)
+data <- NULL
+for(ticker in tickers)
+  data <- na.omit(cbind(data,getSymbols(ticker, from = start, to = end,auto.assign = F)))
+rm('tickers', 'ticker')
+names(data) <- c("open","high", "low", "close", "volume","adjusted")
+hist <- round(data,2)
+hist
+write.csv(hist, file=paste("/cloud/project/", stock, "_hist_", now,".txt", sep=""))
+```
+
+```{r describe historic data, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, comment=NA}
+require(Hmisc)
+describe(hist)
+```
+
+### YTD Data
+
+```{r YTD, message=FALSE, warning=FALSE, comment=NA, include=FALSE, paged.print=FALSE}
+ytd <- data["2019-01-01/"]
+ytd
+write.csv(ytd, file=paste("/cloud/project/", stock, "_ytd_", now,".txt", sep=""))
+```
+
+```{r describe ytd data, echo=FALSE, message=FALSE, warning=FALSE, comment=NA, paged.print=FALSE}
+require(Hmisc)
+describe(ytd)
+```
+
+## OHLC Analysis {.tabset}
+
+### Highest and Lowest Points
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=TRUE}
+# cat("Does the data contain at least OHL and C?") 
+# is.OHLC(ytd) 
+# cat("Does the data contain volume?") 
+# has.Vo(ytd) 
+# cat("just the Open column please.") 
+# Op(ytd) 
+cat("Where and what was the high point?")
+cat("\n")
+seriesHi(ytd) 
+cat("\n")
+cat("Where and what was the lowest point?")
+cat("\n")
+seriesLo(ytd)
+```
+
+```{r Create dataframes for percent changes echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+OpCl <- OpCl(ytd)
+#OpCl
+
+OpOp <- OpOp(ytd) 
+#OpOp
+
+HiCl <- HiCl(ytd)
+#HiCl
+
+```
+
+```{r combined percent changes, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+percent_cbind <- cbind(ytd[,"adjusted"], OpCl, OpOp, HiCl)
+percent_cbind  <- as.data.frame(percent_cbind)
+names(percent_cbind) <- c("Adjusted","Daily Percent Change Open to Close","One Period Open to Open Change", "Percent Change High to Close")
+
+percent_cbind <- cbind(Date = rownames(percent_cbind), percent_cbind)
+rownames(percent_cbind) <- 1:nrow(percent_cbind)
+#percent_cbind
+write.csv(percent_cbind, file=paste("/cloud/project/", stock, "_percent_chng_", now,".txt", sep=""))
+```
+
+### Daily Percent Change Open to Close
+
+```{r combined percent changes OpCl, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+plot(OpCl$OpCl.ytd, type = "l", col = "blue", lwd = 2, 
+     ylab = "Percent Change", main = "Daily Percent Change Open to Close")
+
+legend(x = 'topleft', legend = stock, lty = 1, lwd = 2, col = 'blue')
+
+jpeg(file = "OpCl_line_chart.jpg")
+dev.off()
+```
+
+### One Period Open to Open Change
+```{r combined percent changes OpOp, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+plot(OpOp$OpOp.ytd, type = "l", col = "blue", lwd = 2, 
+     ylab = "Percent Change", main = "One Period Open to Open Change")
+
+legend(x = 'topleft', legend = stock, lty = 1, lwd = 2, col = 'blue')
+
+jpeg(file = "OpOp_line_chart.jpg")
+dev.off()
+```
+
+### Percent Change High to Close
+```{r combined percent changes HiCl, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+plot(HiCl$HiCl.ytd, type = "l", col = "blue", lwd = 2, 
+     ylab = "Percent Change", main = "Daily Percent Change Open to Close")
+
+legend(x = 'topleft', legend = stock, lty = 1, lwd = 2, col = 'blue')
+
+jpeg(file = "HiCl_line_chart.jpg")
+dev.off()
+```
+
+## Chart Visualizations {.tabset}
+
+### Monthly Closing Prices
+
+```{r Monthly Closing Price, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+plot(ytd$adjusted, type = "l", col = "blue", lwd = 2, 
+     ylab = "Adjusted close", main = "Monthly closing price")
+
+legend(x = 'topleft', legend = stock, lty = 1, lwd = 2, col = 'blue')
+```
+
+
+### 10 Days Candle Stick Chart
+
+```{r 10 Days candle stick chart, echo=FALSE, message=FALSE, warning=FALSE, comment=NA}
+require(quantmod)
+
+cat(("10 Days Candle Chart plus Technicals"),'\n')
+candleChart(data,subset='last 10 days', multi.col=TRUE,theme='white',TA="addVo();addBBands();addEMA();addSMA(); addRSI()") 
+```
+
+### 1 Month Candle Stick Chart
+
+```{r 1 Month candle stick chart, echo=FALSE, message=FALSE, warning=FALSE, comment=NA}
+require(quantmod)
+
+cat(("1 Month Candle Chart plus Technicals"),'\n')
+candleChart(data,subset='last 1 months', multi.col=TRUE,theme='white',TA="addVo();addBBands();addEMA();addSMA(); addRSI()") 
+```
+
+### 2 Month Candle Stick Chart
+
+```{r 2 Month candle stick chart, echo=FALSE, message=FALSE, warning=FALSE, comment=NA}
+require(quantmod)
+
+cat(("2 Month Candle Chart plus Technicals"),'\n')
+candleChart(data,subset='last 2 months', multi.col=TRUE,theme='white',TA="addVo();addBBands();addEMA();addSMA(); addRSI()") 
+```
+
+### 3 Month Candle Stick Chart
+
+```{r 3 Month candle stick chart, echo=FALSE, message=FALSE, warning=FALSE, comment=NA}
+require(quantmod)
+
+cat(("3 Month Candle Chart plus Technicals"),'\n')
+candleChart(data,subset='last 3 months', multi.col=TRUE,theme='white',TA="addVo();addBBands();addEMA();addSMA(); addRSI()") 
+```
+
+### 6 Month Candle Stick Chart
+
+```{r 6 Month candle stick chart, echo=FALSE, message=FALSE, warning=FALSE, comment=NA}
+require(quantmod)
+
+cat(("6 Month Candle Chart plus Technicals"),'\n')
+candleChart(data,subset='last 6 months', multi.col=TRUE,theme='white',TA="addVo();addBBands();addEMA();addSMA(); addRSI()") 
+```
+
+## Statitiscal Analysis {.tabset}
+
+### Statisitcal Summary of Historic Data
+```{r hist summarize data, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, comment=NA}
+require(Hmisc)
+sumtable <- summary(data)
+cat('Here are the summary statistics for the historical dataset:','\n')
+cat('\n')
+library(formattable)
+formattable(sumtable)
+write.table(sumtable, file=paste("/cloud/project/", stock, "_sumtable_", now,".txt", sep=""))
+```
+
+```{r hist boxplot, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+hist.bx <- as.data.frame(hist)
+hist.boxplot <- boxplot(hist.bx$adjusted)
+hist.boxplot
+```
+
+### Statisitcal Summary of YTD Data
+```{r YTD summarize data, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, comment=NA}
+require(Hmisc)
+sumtable.ytd <- summary(ytd)
+cat('Here are the summary statistics for the historical ytdset:','\n')
+cat('\n')
+library(formattable)
+formattable(sumtable.ytd)
+write.table(sumtable.ytd, file=paste("/cloud/project/", stock, "_sumtable_", now,".txt", sep=""))
+```
+```{r YTD boxplot, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+ytd.bx <- as.data.frame(ytd)
+ytd.boxplot <- boxplot(ytd.bx$adjusted)
+ytd.boxplot
+
+ytd.bx <- cbind(date = rownames(ytd.bx), ytd.bx)
+rownames(ytd.bx) <- 1:nrow(ytd.bx)
+
+boxplot(ytd.bx$adjusted ~ ytd.bx$date,
+data=ytd.bx,
+main="Different boxplots for each month",
+xlab="Month Number",
+ylab="Price",
+col="orange",
+border="brown"
+)
+```
+
+## Return Analysis {.tabset}
+
+### Log Return YTD Data
+```{r log return YTD data, echo=FALSE, message=FALSE, warning=FALSE, comment=NA, paged.print=FALSE}
+log.return <- diff(log(ytd$adjusted))
+log.return <- plot(log.return)
+jpeg('log.return.jpg')
+plot(log.return)
+dev.off()
+log.return
+```
+
