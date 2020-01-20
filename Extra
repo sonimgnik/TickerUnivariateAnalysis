@@ -1,0 +1,464 @@
+---
+title: "Extra"
+author: "Nicholas Toscano"
+date: "August 17, 2019"
+output: html_document
+---
+
+
+# ```{r Calculate RSI 1080day, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+# #Calculate RSI
+# require(quantmod)
+# price <- ticker.go[,"Adjusted"]
+# rsi <- na.omit(signif(RSI(price, n=14, maType="WMA", wts=ticker.go[,"Volume"]),4))
+# 
+# names(rsi)<-c("rsi")
+# 
+# data.df <- na.omit(merge(ticker.go,rsi))
+# 
+# data.df<- data.frame(date=index(data.df), coredata(data.df))
+# names(data.df) <- c("Date","Open","High","Low","Close","Volume","Adjusted", "RSI")
+# ```
+# 
+# ```{r Calculate RSI 90day, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+# #Calculate RSI
+# require(quantmod)
+# price.sub1 <- ticker.go.sub1[,"Adjusted"]
+# rsi.sub1 <- na.omit(signif(RSI(price, n=14, maType="WMA", wts=ticker.go[,"Volume"]),4))
+# 
+# names(rsi.sub1)<-c("rsi")
+# 
+# data.df.sub1 <- na.omit(merge(ticker.go.sub1,rsi.sub1))
+# 
+# data.df.sub1<- data.frame(date=index(data.df.sub1), coredata(data.df.sub1))
+# names(data.df.sub1) <- c("Date","Open","High","Low","Close","Volume","Adjusted", "RSI")
+# ```
+
+# ```{r Calculate Statsitics and write to table, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+# library(xts)
+# library(zoo)
+# 
+# options(digits = 4)
+# 
+# data.sub <- mutate(data.sub, Adjusted.Mean = mean(data.sub$Adjusted))
+# data.sub <- mutate(data.sub, High.Hi = max(data.sub$High))
+# data.sub <- mutate(data.sub, Low.Lo = min(data.sub$Low))
+# data.sub <- mutate(data.sub, UCL = data.sub$Adjusted.Mean+(1*sd(data.sub$Adjusted)))
+# data.sub <- mutate(data.sub, LCL = data.sub$Adjusted.Mean-(1*sd(data.sub$Adjusted)))
+# data.sub$ID <- seq.int(nrow(data.sub))
+# 
+# #Sort table
+# data.sub<-data.sub[c("ID","Date","Open","High","Low","Close","Volume","Adjusted","RSI","Adjusted.Mean","High.Hi","Low.Lo","UCL","LCL")]
+# ```
+
+```{r Calculate Statsitics and write to table 90 days, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+# #Calculate statistics
+# options(digits = 4)
+# 
+# data.df.sub1 <- mutate(data.df.sub1 , Adjusted.Mean = mean(data.df.sub1$Adjusted))
+# data.df.sub1  <- mutate(data.df.sub1 , High.Hi = max(data.df.sub1$High))
+# data.df.sub1  <- mutate(data.df.sub1 , Low.Lo = min(data.df.sub1$Low))
+# data.df.sub1  <- mutate(data.df.sub1 , UCL = data.df.sub1$Adjusted.Mean+(1*sd(data.df.sub1$Adjusted)))
+# data.df.sub1  <- mutate(data.df.sub1, LCL = data.df.sub1$Adjusted.Mean-(1*sd(data.df.sub1$Adjusted)))
+# data.df.sub1$ID <- seq.int(nrow(data.df.sub1))
+# 
+# #Sort table
+# data.df.sub1<-data.df.sub1[c("ID","Date","Open","High","Low","Close","Volume","Adjusted","RSI","Adjusted.Mean","High.Hi","Low.Lo","UCL","LCL")]
+```
+
+
+```{r Descriptive Statistics, echo=FALSE, message=FALSE, warning=FALSE, comment=NA, paged.print=FALSE}
+#Calculate and print measures of central tendencies
+cat(("Measures of central tendancy:"),'\n')
+summary((data.sub$adjusted),'\n')
+cat("Standard deviation:",sd(data.sub$adjusted),'\n')
+
+options(digits = 4)
+
+cat("High:",signif(max(data.sub$high),4),'\n')
+cat("Lo:",signif(min(data.sub$low),4),'\n')
+
+cat("Mode Adjusted Prices:", names(table(data.sub$adjusted))[table(data.sub$adjusted)==max(table(data.sub$adjusted))],'\n')
+cat("Mode Highs:", names(table(data.sub$high))[table(data.sub$high)==max(table(data.sub$high))],'\n')
+cat("Mode Lows:", names(table(data.sub$low))[table(data.sub$low)==max(table(data.sub$low))],'\n')
+
+cat(("The following histograms describe the frequency and range of the adjusted closing prices and the volume."),'\n')
+
+#Adjust the breaks or xlim to better fit the data.
+histinfo1<-hist(data.sub$adjusted, breaks=60,xlim=c(0,50), xlab="Adjusted Prices", main="Frequency and Range of Adjusted Closing Prices", col="lightblue", prob=T)
+lines(density(data.sub$adjusted))
+
+histinfo2<-hist(data.sub$volume, breaks=160, xlim=c(0,20000000), xlab="Volume", main="Frequency of Volume", col="lightblue", prob=T)
+lines(density(data.sub$volume))
+```
+
+```{r Descriptive Statistics subset1, echo=FALSE, message=FALSE, warning=FALSE, comment=NA, paged.print=FALSE}
+Calculate and print measures of central tendencies
+cat(("Measures of central tendancy:"),'\n')
+summary((data.df.sub1$Adjusted),'\n')
+cat("Standard deviation:",sd(data.df.sub1$Adjusted),'\n')
+
+options(digits = 4)
+
+cat("Mean:",signif(mean(data.df.sub1$Adjusted),4),'\n')
+cat("Standard Deviation:",signif(sd(data.df.sub1$Adjusted),4),'\n')
+cat("High:",signif(max(data.df.sub1$High),4),'\n')
+cat("Lo:",signif(min(data.df.sub1$Low),4),'\n')
+
+cat("Mode Adjusted Prices:", names(table(data.df.sub1$Adjusted))[table(data.df.sub1$Adjusted)==max(table(data.df.sub1$Adjusted))],'\n')
+cat("Mode Highs:", names(table(data.df.sub1$High))[table(data.df.sub1$High)==max(table(data.df.sub1$High))],'\n')
+cat("Mode Lows:", names(table(data.df.sub1$Low))[table(data.df.sub1$Low)==max(table(data.df.sub1$Low))],'\n')
+
+cat(("The following histograms describe the frequency and range of the adjusted closing prices and the volume for the past 90 days."),'\n')
+
+#Adjust the breaks or xlim to better fit the data.
+histinfo3<-hist(data.df.sub1$Adjusted, breaks=60,xlim=c(0,50), xlab="Adjusted Prices", main="Frequency and Range of Adjusted Closing Prices Subset", col="lightblue", prob=T)
+lines(density(data.df.sub1$Adjusted))
+
+histinfo4<-hist(data.df.sub1$Volume, breaks=160, xlim=c(0,20000000), xlab="Volume", main="Frequency of Volume Subset", col="lightblue", prob=T)
+lines(density(data.df.sub1$Volume))
+```
+
+```{r Calculate rolling mean, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(zoo)
+as.zoo(ticker.go$Adjusted)
+ma<-rollmean(ticker.go$Adjusted,12, align="right")
+lineChart(ma,theme = chartTheme("white", up.col='black'))
+```
+
+```{r Caclulate voliatility by day, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+diff(log(ticker.go))
+apply.daily(as.xts(diff(log(ticker.go))),sd)
+sqrt(251)*apply.daily(as.xts(diff(log(ticker.go))),sd)
+
+diff(log(ticker.go.sub1))
+apply.daily(as.xts(diff(log(ticker.go.sub1))),sd)
+sqrt(251)*apply.daily(as.xts(diff(log(ticker.go.sub1))),sd)
+```
+
+```{r Plot Daily Volatility, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+plot(sqrt(251)*apply.daily(as.xts(diff(log(ticker.go))),sd), main= "Ticker: Daily Volatility", ylab= "Std dev, anualized")
+plot(sqrt(251)*apply.daily(as.xts(diff(log(ticker.go.sub1))),sd), main= "Ticker: Daily Volatility Subset", ylab= "Std dev, anualized")
+```
+
+```{r Caclulate voliatility by week, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+diff(log(ticker.go))
+apply.weekly(as.xts(diff(log(ticker.go))),sd)
+sqrt(251)*apply.weekly(as.xts(diff(log(ticker.go))),sd)
+```
+
+```{r Plot Weekly Volatility, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+plot(sqrt(251)*apply.weekly(as.xts(diff(log(ticker.go))),sd), main= "Ticker: Weekly Volatility", ylab= "Std dev, anualized")
+```
+
+```{r Caclulate voliatility by calendar month, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+diff(log(ticker.go))
+apply.monthly(as.xts(diff(log(ticker.go))),sd)
+sqrt(251)*apply.monthly(as.xts(diff(log(ticker.go))),sd)
+```
+
+```{r Plot Monthly Volatility, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+plot(sqrt(251)*apply.monthly(as.xts(diff(log(ticker.go))),sd), main= "Ticker: Monthly Volatility", ylab= "Std dev, anualized")
+```
+
+```{r Graph simulated prices, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results='hide'}
+ggplot(season.df, aes(Date, Adjusted)) + geom_line() + ggtitle("Trend")
+
+monthOrder <- c('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
+season.df$Month <- factor(format(season.df$Date, "%b"), levels = monthOrder)
+
+ggplot(season.df, aes(Month, Adjusted)) + geom_boxplot() + stat_boxplot(geom ='errorbar') + ggtitle("Additive Deviation")
+
+ggplot(season.df,aes(Date,Adjusted)) + geom_bar(stat = "identity") + ggtitle("Additive Seasonality")
+```
+
+```{r 3 and 6 month candle stick chart, echo=FALSE, message=FALSE, warning=FALSE}
+require(quantmod)
+
+cat(("3 Month Candle Chart plus Technicals"),'\n')
+candleChart(ticker.go,subset='last 3 months', multi.col=TRUE,theme='white',TA="addVo();addBBands();addEMA();addSMA(); addRSI()") 
+
+cat(("6 Month Candle Chart plus Technicals"),'\n')
+candleChart(ticker.go,subset='last 6 months', multi.col=TRUE,theme='white',TA="addVo();addBBands();addEMA();addSMA(); addRSI()") 
+```
+
+```{r Create RSI chart, echo=FALSE, message=FALSE, warning=FALSE, comment=NA, paged.print=FALSE}
+#RSI chart 5 Day
+library(lubridate)
+require(quantmod)
+
+lineChart(rsi,theme = chartTheme("white", up.col='black'), subset='last 5 days')
+
+#RSI chart 10 Day
+cat(("RSI chart 10 Day:"),'\n')
+lineChart(rsi,theme = chartTheme("white", up.col='black'), subset='last 10 days')
+
+#RSI chart 90 Day
+cat(("RSI chart 90 Day:"),'\n')
+lineChart(rsi,theme = chartTheme("white", up.col='black'), subset='last 3 months')
+
+#RSI chart 180 Day
+cat(("RSI chart 180 Day:"),'\n')
+lineChart(rsi,theme = chartTheme("white", up.col='black'), subset='last 6 months')
+```
+
+```{r Sort values from highest to lowest subset1, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+#Sort values from higest to lowest
+sort(table(signif(data.df.sub1$Adjusted,4)))
+sort(table(signif(data.df.sub1$High,4)))
+sort(table(signif(data.df.sub1$Low,4)))
+```
+
+```{r Create process control chart subset1, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+cat(("The ticker control chart for full period of data pull"),'\n')
+cat(("The ticker control chart displays the price movement between the upper control level and the lovwer control level.  The mean price for the time period is shown.  The UCL and LCL are set to 1 standard deviation.  Control limits can be adjusted in the code."),'\n')
+require(dplyr)
+require(ggplot2)
+
+ggplot(data.df.sub1, aes(x = data.df.sub1$ID))+geom_line(aes(y = data.df.sub1$Adjusted),colour ="blue") + geom_line(aes(y = data.df.sub1$Adjusted.Mean), colour = "black")+ geom_line(aes(y = data.df.sub1$UCL), colour = "orange")+ geom_line(aes(y = data.df.sub1$LCL), colour = "orange")+ geom_line(aes(y = data.df.sub1$High.Hi), colour = "green")+ geom_line(aes(y = data.df.sub1$Low.Lo), colour = "red") + ggtitle("Ticker Control Chart - Subset") + xlab("Adjusted Price") + ylab("Observations")+
+    scale_x_continuous(name="Adjusted Prices", labels = ) + 
+  scale_y_continuous(name="Observations", labels = scales::comma)
+ggsave("VolbyPriControlsub1.png",width=6, height=4, unit="cm", dpi=300)
+
+#Volume by Price Chart Scatter Plot
+ggplot(data.df.sub1, aes(x=data.df.sub1$Volume, y=data.df.sub1$Adjusted)) + geom_point(na.rm=TRUE, color="blue", size=1)+ 
+  scale_x_continuous(name="Volume", labels = scales::comma) + 
+  scale_y_continuous(name="Adjusted", labels = scales::dollar) + ggtitle("Volume by Price Scatter Plot - Subset")+
+ggsave("VolbyPriScatsub1.png",width=12, height=8, unit="cm", dpi=300)
+```
+
+```{r Sort values from highest to lowest, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+#Sort values from higest to lowest
+sort(table(signif(data.df$Adjusted,4)))
+sort(table(signif(data.df$High,4)))
+sort(table(signif(data.df$Low,4)))
+```
+
+```{r Create process control chart, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+cat(("The ticker control chart for full period of data pull"),'\n')
+cat(("The ticker control chart displays the price movement between the upper control level and the lovwer control level.  The mean price for the time period is shown.  The UCL and LCL are set to 1 standard deviation.  Control limits can be adjusted in the code."),'\n')
+require(dplyr)
+require(ggplot2)
+
+ggplot(data.df, aes(x = data.df$ID))+geom_line(aes(y = data.df$Adjusted),colour ="blue") + geom_line(aes(y = data.df$Adjusted.Mean), colour = "black")+ geom_line(aes(y = data.df$UCL), colour = "orange")+ geom_line(aes(y = data.df$LCL), colour = "orange")+ geom_line(aes(y = data.df$High.Hi), colour = "green")+ geom_line(aes(y = data.df$Low.Lo), colour = "red") + ggtitle("Ticker Control Chart") + xlab("Adjusted Price") + ylab("Observations")+
+    scale_x_continuous(name="Adjusted Prices", labels = ) + 
+  scale_y_continuous(name="Observations", labels = scales::comma)
+ggsave("VolbyPriControl.png",width=6, height=4, unit="cm", dpi=300)
+
+#Volume by Price Chart Scatter Plot
+ggplot(data.df, aes(x=data.df$Volume, y=data.df$Adjusted)) + geom_point(na.rm=TRUE, color="blue", size=1)+ 
+  scale_x_continuous(name="Volume", labels = scales::comma) + 
+  scale_y_continuous(name="Adjusted", labels = scales::dollar) + ggtitle("Volume by Price Scatter Plot")+
+ggsave("VolbyPriScat.png",width=12, height=8, unit="cm", dpi=300)
+```
+
+
+
+
+```{r Print Correlation Matrix for Major Indexes, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+corrplot(res2, method="number",tl.col="black", tl.srt=45)
+png('res2.png')
+dev.off()
+```
+
+```{r Create Chart and Signals, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results='hide'}
+ticker.go %>% 
+    Ad() %>% 
+    chartSeries()
+
+ticker.go %>%
+    chartSeries(TA='addBBands();
+                    addBBands(draw="p");
+                    addVo();
+                    addRSI();
+                    addMACD()', 
+                subset='2016',
+                theme="white"
+                ) 
+
+ticker.go %>%
+    Ad() %>%
+    dailyReturn(type = 'log') %>% 
+    head() 
+```
+
+```{r Convert returns, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results='hide'}
+ticker.go_log_returns <- ticker.go %>%
+    Ad() %>%
+    dailyReturn(type = "log")
+names(ticker.go_log_returns) <- "ticker.go.Log.Returns"
+# Plot the log-returns    
+ticker.go_log_returns %>%    
+    ggplot(aes(x = ticker.go.Log.Returns)) + 
+    geom_histogram(bins = 100) + 
+    geom_density() +
+    geom_rug(alpha = 0.5) 
+
+probs <- c(.005, .025, .25, .5, .75, .975, .995)
+dist_log_returns <- ticker.go_log_returns %>% 
+    quantile(probs = probs, na.rm = TRUE)
+dist_log_returns
+
+mean_log_returns <- mean(ticker.go_log_returns, na.rm = TRUE)
+sd_log_returns <- sd(ticker.go_log_returns, na.rm = TRUE)
+
+mean_log_returns %>% exp()
+jpeg('tickergoLogReturns.jpg')
+dev.off()
+```
+
+```{r Simulate prices, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results='hide'}
+# Parameters
+N     <- 1000
+mu    <- mean_log_returns
+sigticker.go <- sd_log_returns
+day <- 1:N
+price_init <- ticker.go$Adjusted[[nrow(ticker.go$Adjusted)]]
+# Simulate prices
+set.seed(386) 
+price  <- c(price_init, rep(NA, N-1))
+for(i in 2:N) {
+    price[i] <- price[i-1] * exp(rnorm(1, mu, sigticker.go))
+}
+price_sim <- cbind(day, price) %>% 
+    as_tibble()
+# Visualize price simulation
+price_sim %>%
+    ggplot(aes(day, price)) +
+    geom_line() +
+    ggtitle(str_c("Simulated Prices for ", N," Trading Days"))
+ggsave("SimulatedTradingPrices.png",width=12, height=8, unit="cm", dpi=300)
+```
+
+```{r Simulate prices 2, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results='hide'}
+# Parameters
+N     <- 252 # Number of Stock Price Simulations
+M     <- 250  # Number of Monte Carlo Simulations   
+mu    <- mean_log_returns
+sigma <- sd_log_returns
+day <- 1:N
+price_init <- ticker.go$Adjusted[[nrow(ticker.go$Adjusted)]]
+# Simulate prices
+set.seed(123)
+monte_carlo_mat <- matrix(nrow = N, ncol = M)
+for (j in 1:M) {
+    monte_carlo_mat[[1, j]] <- price_init
+    for(i in 2:N) {
+        monte_carlo_mat[[i, j]] <- monte_carlo_mat[[i - 1, j]] * exp(rnorm(1, mu, sigma))
+    }
+}
+# Format and organize data frame
+price_sim <- cbind(day, monte_carlo_mat) %>%
+    as_tibble() 
+nm <- str_c("Sim.", seq(1, M))
+nm <- c("Day", nm)
+names(price_sim) <- nm
+price_sim <- price_sim %>%
+    gather(key = "Simulation", value = "Stock.Price", -(Day))
+# Visualize simulation
+price_sim %>%
+    ggplot(aes(x = Day, y = Stock.Price, Group = Simulation)) + 
+    geom_line(alpha = 0.1) +
+    ggtitle(str_c("Ticker: ", M, 
+                  " Monte Carlo Simulations for Prices Over ", N, 
+                  " Trading Days"))
+ggsave("MonteCarloSim.png",width=12, height=8, unit="cm", dpi=300)
+```
+
+```{r Simulate prices 3, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results='hide'}
+end_stock_prices <- price_sim %>% 
+    filter(Day == max(Day))
+probs <- c(.005, .025, .25, .5, .75, .975, .995)
+dist_end_stock_prices <- quantile(end_stock_prices$Stock.Price, probs = probs)
+dist_end_stock_prices %>% round(2)
+```
+
+```{r Calculate CAGR, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+# Inputs
+N_hist          <- nrow(ticker.go) / 252
+p_start_hist    <- ticker.go$Adjusted[[1]]
+p_end_hist      <- ticker.go$Adjusted[[nrow(ticker.go)]]
+N_sim           <- N / 252
+p_start_sim     <- p_end_hist
+p_end_sim       <- dist_end_stock_prices[[4]]
+# CAGR calculations
+CAGR_historical <- ((p_end_hist / p_start_hist) ^ (1 / N_hist) - 1)
+CAGR_sim        <- (p_end_sim / p_start_sim) ^ (1 / N_sim) - 1
+print("Summary of CAGRs:")
+percent(CAGR_historical)
+percent(CAGR_sim)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE,results='hide'}
+##WRITE DATA TO FILE
+write.table(res,"res.txt")
+
+write.csv(cor.asset.price, "correlation_tickers.csv")
+
+currentDate <- Sys.Date() 
+csvFileName <- paste("C:/Users/Nick/Documents/R/Projects/MSAR/GBTC/corr",ticker,"_",currentDate,".csv",sep="")
+write.csv(cor.asset.price,file=csvFileName) 
+```
+
+```{r Write  Data to File and Tidy, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE, results='hide'}
+##Write data to file
+currentdate <- Sys.Date() 
+write.csv(data.df, "single_ticker.csv") 
+
+jpeg("freq_range_AdjCP.jpg")
+plot(histinfo1)
+dev.off()
+
+jpeg("freq_vol.jpg")
+plot(histinfo2)
+dev.off()
+
+csvfilename <- paste("C:/Users/Nick/Documents/R/Projects/MSAR/GBTC/single_ticker","_",ticker,"_",currentdate,".csv",sep="")
+write.csv(data.df,file=csvfilename) 
+
+#To delete files in directory
+fn <- "single_ticker.csv"
+if (file.exists(fn)) file.remove(fn)
+
+library(filesstrings)
+##Tidy workspace
+file_list <- list.files()
+temp = list.files(pattern="*.csv")    
+file.move(temp,"GBTC")
+
+file_list <- list.files()
+temp = list.files(pattern="*.txt")    
+file.move(temp,"GBTC")
+
+file_list <- list.files()
+temp = list.files(pattern="*.pdf")    
+file.move(temp,"GBTC")
+
+file_list <- list.files()
+temp = list.files(pattern="*.html")    
+file.move(temp,"GBTC")
+
+file_list <- list.files()
+temp = list.files(pattern="*.png")    
+file.move(temp,"GBTC")
+
+file_list <- list.files()
+temp = list.files(pattern="*.jpg")    
+file.move(temp,"GBTC")
+
+print("This process has completed")
+```
+
+# ```{r Call Libraries for MONTE CARLO AND CAGR, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE, results='hide'}
+# library(quantmod)   # get stock prices; useful stock analysis functions
+# library(xts)        # working with extensible time series 
+# library(rvest)      # web scraping
+# library(tidyverse)  # ggplot2, purrr, dplyr, tidyr, readr, tibble
+# library(stringr)    # working with strings
+# library(forcats)    # working with factors
+# library(lubridate)  # working with dates in tibbles / data frames
+# library(plotly)     # Interactive plots
+# library(corrplot)   # Visuazlize correlation plots
+# library(scales)     # convert deciNTDOYls to percent
+# library(progress)   #monitors progress of script
+# ```
